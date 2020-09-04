@@ -22,12 +22,6 @@
     #inlineBox {
       align-items: center;
       background-color: transparent;
-      border: 1px solid #333;
-      -webkit-border-radius: 10px;
-      -moz-border-radius: 10px;
-      -ms-border-radius: 10px;
-      -o-border-radius: 10px;
-      border-radius: 10px;
       display: flex;
       height: 100vh;
       justify-content: center;
@@ -47,10 +41,22 @@
       border-collapse: separate; /* Required by IE 9 */
     }
     #inlineBox-content {
+      -webkit-border-radius: 10px;
+      -moz-border-radius: 10px;
+      -ms-border-radius: 10px;
+      -o-border-radius: 10px;
+      border-radius: 10px;
       height: auto;
       max-height: 100%;
       width: auto;
       max-width: 100%;
+    }
+    #inlineBox-content.iframe-content {
+      background-color: #fff;
+    }
+    #inlineBox-content #inlineBox-iframe {
+      height: 100%;
+      width: 100%;
     }
     #inlineBox-content video {
       max-width: 100%;
@@ -73,12 +79,30 @@
   </style>
 
   <body>
-    <a href="#" data-inline-box data-inline-box-content="content/test-1024.mp4"
-      >Open modal</a
+    <a href="#" data-inline-box data-inline-box-content="content/test-1024.mp4">
+      Open modal MP4
+    </a>
+    <br />
+    <br />
+    <a href="#" data-inline-box data-inline-box-content="content/leite.mp3">
+      Open modal MP3
+    </a>
+    <br />
+    <br />
+    <a
+      href="#"
+      data-inline-box
+      data-inline-box-content="https://idcreativ.de/beitrag-intro-01?tmpl=component"
+      data-inline-box-height="600px"
+      data-inline-box-max-height="80%"
+      data-inline-box-width="800px"
+      data-inline-box-max-width="100%"
+      data-inline-box-padding="15px 0 0 0"
     >
+      Open modal ARTICLE
+    </a>
 
     <div id="inlineBox" style="display: none"></div>
-
     <div id="inlineBox-overlay" style="display: none"></div>
     <div id="inlineBox-close" style="display: none">X</div>
 
@@ -93,20 +117,45 @@
         jQuery('html').off('click');
         jQuery('#inlineBox-close').off('click');
         jQuery('#inlineBox-content video').remove();
+        jQuery('#inlineBox-content iframe').remove();
         jQuery('#inlineBox-content').remove();
+        jQuery('#inlineBox-content').removeClass('iframe-content');
       }
 
       function loadModalContent(el) {
         const contentPath = jQuery(el).data('inline-box-content');
         jQuery('#inlineBox').append('<div id="inlineBox-content"></div>');
-        const video = $('<video />', {
-          id: 'video',
-          src: contentPath,
-          type: 'video/mp4',
-          controls: true,
-          autoplay: true,
-        });
-        video.appendTo(jQuery('#inlineBox-content'));
+        const contentExtension = contentPath.substr(contentPath.length - 3);
+        if (!jQuery(el).data('multi-source-set')) {
+          if (contentExtension === 'mp4' || contentExtension === 'mp3') {
+            const video = jQuery('<video />', {
+              id: 'video',
+              src: contentPath,
+              type: 'video/' + contentExtension,
+              controls: true,
+              autoplay: true,
+            });
+            video.appendTo(jQuery('#inlineBox-content'));
+          } else {
+            jQuery('<iframe>', {
+              src: contentPath,
+              id: 'inlineBox-iframe',
+              frameborder: 0,
+            }).appendTo('#inlineBox-content');
+            jQuery('#inlineBox-content').addClass('iframe-content');
+          }
+          const height = jQuery(el).data('inline-box-height');
+          const width = jQuery(el).data('inline-box-width');
+          const maxHeight = jQuery(el).data('inline-box-max-height');
+          const maxWidth = jQuery(el).data('inline-box-max-width');
+          const padding = jQuery(el).data('inline-box-padding');
+          if (height) jQuery('#inlineBox-content').css('height', height);
+          if (maxHeight)
+            jQuery('#inlineBox-content').css('max-height', maxHeight);
+          if (width) jQuery('#inlineBox-content').css('width', width);
+          if (maxWidth) jQuery('#inlineBox-content').css('max-width', maxWidth);
+          if (padding) jQuery('#inlineBox-content').css('padding', padding);
+        }
       }
 
       function openInlineModal(el) {
