@@ -189,6 +189,11 @@
   --plyr-color-main: #c84c00;
   --plyr-video-control-background-hover: rgba(0, 0, 0, 0.4);
   --plyr-audio-control-background-hover: rgba(0, 0, 0, 0.4);
+  --plyr-audio-controls-background: #fff;
+}
+
+.plyr {
+  display: block !important;
 }
 
 .plyr svg,

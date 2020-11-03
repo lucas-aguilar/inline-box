@@ -1,3 +1,4 @@
+// Remove all the changes done before the modal had opened and close it
 function closeInlineModal() {
   jQuery('body').removeClass('overflow-hidden');
   jQuery('html').removeClass('overflow-hidden');
@@ -21,6 +22,7 @@ function closeInlineModal() {
   jQuery('#inlineBox-close').remove();
 }
 
+// Hide the loading and the loading poster image and display the content
 function canPlayFunc() {
   jQuery('#inlineBox-poster').fadeOut();
   jQuery('#inlineBox-loading').fadeOut();
@@ -28,6 +30,7 @@ function canPlayFunc() {
   jQuery('#inlineBox-content').fadeIn();
 }
 
+// Append the title and description to above and bellow the modal, respectively
 function appendTitleDesc(el) {
   const title = jQuery(el).data('inline-box-title') || jQuery(el).data('ib-t');
   const desc = jQuery(el).data('inline-box-desc') || jQuery(el).data('ib-d');
@@ -41,16 +44,25 @@ function appendTitleDesc(el) {
     );
 }
 
-function createVideoContent(contentPath, contentExtension) {
+function createVideoContent(contentPath, contentExtension, poster) {
   jQuery('#inlineBox-content').addClass('video-content');
+  // Create the HTML element
   const video = jQuery(
-    '<video id="inlineBox-video" src="' +
+    '<video id="inlineBox-video"' +
+      getPosterAttrString(poster) +
+      'src="' +
       contentPath +
       '" type="video/' +
       contentExtension +
-      '" controls autoplay />'
+      '" autoplay controls playsinline crossorigin />'
   );
   video.appendTo(jQuery('#inlineBox-content'));
+
+  // const videoElem = document.querySelector('#inlineBox-content video');
+  // videoElem.addEventListener('loadedmetadata', canPlayFunc);
+  // videoElem.addEventListener('canplay', canPlayFunc);
+
+  // Instantiate the Plyr player lib
   const player = new Plyr('#inlineBox-video', {
     controls: [
       'play',
@@ -62,7 +74,12 @@ function createVideoContent(contentPath, contentExtension) {
     ],
     autoplay: true,
   });
-  player.on('canplay', (event) => {
+  // Bind event to hide loading and display the player
+  player.on('loadedmetadata', function (event) {
+    canPlayFunc();
+  });
+  // Fix for 'canplay' on some iOS devices
+  player.on('canplay', function (event) {
     canPlayFunc();
   });
   window.player = player;
@@ -70,17 +87,31 @@ function createVideoContent(contentPath, contentExtension) {
 
 function createAudioContent(contentPath, contentExtension) {
   jQuery('#inlineBox-content').addClass('audio-content');
-  let sourceHTML =
-    '<source src="' + contentPath + '" type="audio/' + contentExtension + '">';
+  // Create the HTML element
   const audio = jQuery(
-    '<audio id="inlineBox-audio" crossorigin playsinline />'
+    '<audio id="inlineBox-audio" controls autoplay src="' +
+      contentPath +
+      '"  type="audio/' +
+      contentExtension +
+      '" />'
   );
   audio.appendTo(jQuery('#inlineBox-content'));
-  audio.append(sourceHTML);
+
+  // Code to use the native HTML5 player:
+  // const audioElem = document.querySelector('#inlineBox-content audio');
+  // audioElem.addEventListener('loadedmetadata', canPlayFunc);
+  // audioElem.addEventListener('canplay', canPlayFunc);
+
+  // Instantiate the Plyr player lib
   const player = new Plyr('#inlineBox-audio', {
-    controls: ['play', 'progress', 'current-time', 'mute'],
+    controls: ['play', 'progress', 'current-time', 'mute', 'volume'],
     autoplay: true,
   });
+  // Bind event to hide loading and display the player
+  player.on('loadedmetadata', function (event) {
+    canPlayFunc();
+  });
+  // Fix for 'canplay' on some iOS devices
   player.on('canplay', function (event) {
     canPlayFunc();
   });
@@ -88,26 +119,32 @@ function createAudioContent(contentPath, contentExtension) {
 }
 
 function createIframeContent(contentPath) {
+  // Create the HTML element
   jQuery('<iframe>', {
     src: contentPath,
     id: 'inlineBox-iframe',
     frameborder: 0,
   }).appendTo('#inlineBox-content');
   jQuery('#inlineBox-content').addClass('iframe-content');
+  // Bind event to hide loading and display the iframe
   jQuery('#inlineBox-content iframe').load(function () {
     canPlayFunc();
   });
 }
 
-function createVideoSourceSetContent(el) {
+function createVideoSourceSetContent(el, poster) {
   jQuery('#inlineBox-content').addClass('video-content');
+  // Create the HTML element
   const video = jQuery(
-    '<video id="inlineBox-video" controls crossorigin playsinline />'
+    '<video id="inlineBox-video" ' +
+      getPosterAttrString(poster) +
+      ' controls crossorigin playsinline />'
   );
   const sourceSetStr =
     jQuery(el).data('inline-box-source-set') || jQuery(el).data('ib-ss');
   const sourceSetArrAux = sourceSetStr.split('|');
   const sourceSetArr = [];
+  // Create an array of sources from the sources string
   for (let i = 0; i < sourceSetArrAux.length; i++) {
     const attrArr = sourceSetArrAux[i].split(';');
     let media = '';
@@ -123,6 +160,7 @@ function createVideoSourceSetContent(el) {
       src: src,
     });
   }
+  // Append each source to the video element
   for (let i = 0; i < sourceSetArr.length; i++) {
     let source = jQuery('<source />', {
       id: 'inlineBox-video',
@@ -133,8 +171,13 @@ function createVideoSourceSetContent(el) {
     video.append(source);
   }
   video.appendTo(jQuery('#inlineBox-content'));
-  const videoElem = document.querySelector('#inlineBox-content video');
-  videoElem.oncanplay = canPlayFunc;
+
+  // Code to use the native HTML5 player:
+  // const videoElem = document.querySelector('#inlineBox-content video');
+  // videoElem.addEventListener('loadedmetadata', canPlayFunc);
+  // videoElem.addEventListener('canplay', canPlayFunc);
+
+  // Instantiate the Plyr player lib
   const player = new Plyr('#inlineBox-video', {
     controls: [
       'play',
@@ -146,12 +189,23 @@ function createVideoSourceSetContent(el) {
     ],
     autoplay: true,
   });
-  player.on('canplay', (event) => {
+  // Bind event to hide loading and display the player
+  player.on('canplay', function (event) {
+    canPlayFunc();
+  });
+  // Fix for 'canplay' on some iOS devices
+  player.on('loadedmetadata', function (event) {
     canPlayFunc();
   });
   window.player = player;
 }
 
+// Treatment for the poster attributes string
+function getPosterAttrString(poster) {
+  return poster ? 'data-poster="' + poster + '" poster="' + poster + '"' : '';
+}
+
+// Set the style attributes regardless the content type
 function setContentStyle(el) {
   const height =
     jQuery(el).data('inline-box-height') || jQuery(el).data('ib-h');
@@ -169,13 +223,14 @@ function setContentStyle(el) {
   if (padding) jQuery('#inlineBox-content').css('padding', padding);
 }
 
-function loadModalContent(el) {
+function loadModalContent(el, poster) {
+  // Check the content type and execute its respective function
   if (!jQuery(el).data('inline-box-source-set') && !jQuery(el).data('ib-ss')) {
     const contentPath = jQuery(el).attr('href');
     const contentExtension = contentPath.substr(contentPath.length - 3);
     if (contentExtension === 'mp4' || contentExtension === 'mov') {
       appendTitleDesc(el);
-      createVideoContent(contentPath, contentExtension);
+      createVideoContent(contentPath, contentExtension, poster);
     } else if (contentExtension === 'mp3' || contentExtension === 'ogg') {
       appendTitleDesc(el);
       createAudioContent(contentPath, contentExtension);
@@ -184,12 +239,15 @@ function loadModalContent(el) {
     }
   } else {
     appendTitleDesc(el);
-    createVideoSourceSetContent(el);
+    createVideoSourceSetContent(el, poster);
   }
+  // Set the style attributes regardless the content type
   setContentStyle(el);
 }
 
+// Functions to display the modal box
 function openInlineModal(el) {
+  // Try to get and display the poster image before loading the content
   const poster =
     jQuery(el).data('inline-box-poster-img') || jQuery(el).data('ib-pi');
   if (poster) {
@@ -200,20 +258,24 @@ function openInlineModal(el) {
   jQuery('#inlineBox-close').fadeIn();
   jQuery('#inlineBox-loading').fadeIn();
   jQuery('#inlineBox-loading-text').fadeIn();
+  // Add the class 'overflow-hidden' to <body> and <html> to prevent it from scrolling
   jQuery('body').addClass('overflow-hidden');
   jQuery('html').addClass('overflow-hidden');
   jQuery('#inlineBox').fadeIn(function () {
-    loadModalContent(el);
+    loadModalContent(el, poster);
     jQuery('#inlineBox').addClass('inline-box-open');
+    // Bind close function to close icon
     jQuery('#inlineBox-close').click(function () {
       closeInlineModal();
     });
+    // Bind close function to any click outside the modal
     jQuery('#inlineBox').click(function (evt) {
       if (evt.target.id === 'inlineBox') closeInlineModal();
     });
   });
 }
 
+// Append the necessary elements to body
 function appendElemsToBody() {
   jQuery('body').append(
     '<div id="inlineBox" style="display: none">\
@@ -229,17 +291,24 @@ function appendElemsToBody() {
   );
 }
 
+// Fix the modal dimensions
 function setModalMaxHeight() {
   jQuery('#inlineBox-content').css('max-height', window.innerHeight + 'px');
 }
 
+// Execute the function when the page is loaded
 jQuery(document).ready(function ($) {
+  // Bind the click event to all elements with 'data-inline-box' attribute
   $('[data-inline-box]').click(function (e) {
+    // Prevent the page from following the link
     e.preventDefault();
+    // Append the necessary elements to body so it does not have to be included on 'index.php'
     appendElemsToBody();
+    // Functions to display the modal box
     openInlineModal(e.currentTarget);
     return false;
   });
+  // If the page size changes, fix the modal dimensions
   $(window).resize(function () {
     setModalMaxHeight();
   });
