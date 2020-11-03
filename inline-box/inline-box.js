@@ -70,13 +70,13 @@ function createVideoContent(contentPath, contentExtension) {
 
 function createAudioContent(contentPath, contentExtension) {
   jQuery('#inlineBox-content').addClass('audio-content');
-  let audioHtmlStr = '';
-  audioHtmlStr += '<audio id="inlineBox-audio" crossorigin playsinline>';
-  audioHtmlStr +=
+  let sourceHTML =
     '<source src="' + contentPath + '" type="audio/' + contentExtension + '">';
-  audioHtmlStr += '</audio>';
-  const audio = jQuery(audioHtmlStr);
+  const audio = jQuery(
+    '<audio id="inlineBox-audio" crossorigin playsinline />'
+  );
   audio.appendTo(jQuery('#inlineBox-content'));
+  audio.append(sourceHTML);
   const player = new Plyr('#inlineBox-audio', {
     controls: ['play', 'progress', 'current-time', 'mute'],
     autoplay: true,

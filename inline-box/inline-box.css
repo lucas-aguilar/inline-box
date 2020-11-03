@@ -191,10 +191,16 @@
   --plyr-audio-control-background-hover: rgba(0, 0, 0, 0.4);
 }
 
+.plyr svg,
+.plyr button {
+  /* FIX TEMPLATE CSS CONFLICT */
+  margin: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
 .plyr--audio {
   border-radius: 40px;
 }
-
 .plyr--audio .plyr__controls__item.plyr__volume {
   max-width: unset;
   min-width: unset;
