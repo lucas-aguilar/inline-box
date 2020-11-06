@@ -44,7 +44,7 @@ function appendTitleDesc(el) {
     );
 }
 
-function createVideoContent(contentPath, contentExtension, poster) {
+function createVideoContent(contentPath, contentExtension, poster, autoplay) {
   jQuery('#inlineBox-content').addClass('video-content');
   // Create the HTML element
   const video = jQuery(
@@ -54,7 +54,9 @@ function createVideoContent(contentPath, contentExtension, poster) {
       contentPath +
       '" type="video/' +
       contentExtension +
-      '" autoplay controls playsinline crossorigin />'
+      '" ' +
+      (autoplay ? 'autoplay' : '') +
+      ' controls playsinline crossorigin />'
   );
   video.appendTo(jQuery('#inlineBox-content'));
 
@@ -72,7 +74,7 @@ function createVideoContent(contentPath, contentExtension, poster) {
       'volume',
       'fullscreen',
     ],
-    autoplay: true,
+    autoplay: autoplay,
   });
   // Bind event to hide loading and display the player
   player.on('loadedmetadata', function (event) {
@@ -85,13 +87,15 @@ function createVideoContent(contentPath, contentExtension, poster) {
   window.player = player;
 }
 
-function createAudioContent(contentPath, contentExtension) {
+function createAudioContent(contentPath, contentExtension, autoplay) {
   jQuery('#inlineBox-content').addClass('audio-content');
   // Create the HTML element
   const audio = jQuery(
-    '<audio id="inlineBox-audio" controls autoplay src="' +
+    '<audio id="inlineBox-audio" controls ' +
+      (autoplay ? 'autoplay' : '') +
+      ' src="' +
       contentPath +
-      '"  type="audio/' +
+      '" type="audio/' +
       contentExtension +
       '" />'
   );
@@ -105,7 +109,7 @@ function createAudioContent(contentPath, contentExtension) {
   // Instantiate the Plyr player lib
   const player = new Plyr('#inlineBox-audio', {
     controls: ['play', 'progress', 'current-time', 'mute', 'volume'],
-    autoplay: true,
+    autoplay: autoplay,
   });
   // Bind event to hide loading and display the player
   player.on('loadedmetadata', function (event) {
@@ -132,12 +136,14 @@ function createIframeContent(contentPath) {
   });
 }
 
-function createVideoSourceSetContent(el, poster) {
+function createVideoSourceSetContent(el, poster, autoplay) {
   jQuery('#inlineBox-content').addClass('video-content');
   // Create the HTML element
   const video = jQuery(
     '<video id="inlineBox-video" ' +
       getPosterAttrString(poster) +
+      ' ' +
+      (autoplay ? 'autoplay' : '') +
       ' controls crossorigin playsinline />'
   );
   const sourceSetStr =
@@ -187,7 +193,7 @@ function createVideoSourceSetContent(el, poster) {
       'volume',
       'fullscreen',
     ],
-    autoplay: true,
+    autoplay: autoplay,
   });
   // Bind event to hide loading and display the player
   player.on('canplay', function (event) {
@@ -224,22 +230,27 @@ function setContentStyle(el) {
 }
 
 function loadModalContent(el, poster) {
+  // Set a boolean value for 'autoplay'
+  const autoplay =
+    jQuery(el).data('inline-box-autoplay') === undefined
+      ? !(jQuery(el).data('ib-ap') === undefined)
+      : true;
   // Check the content type and execute its respective function
   if (!jQuery(el).data('inline-box-source-set') && !jQuery(el).data('ib-ss')) {
     const contentPath = jQuery(el).attr('href');
     const contentExtension = contentPath.substr(contentPath.length - 3);
     if (contentExtension === 'mp4' || contentExtension === 'mov') {
       appendTitleDesc(el);
-      createVideoContent(contentPath, contentExtension, poster);
+      createVideoContent(contentPath, contentExtension, poster, autoplay);
     } else if (contentExtension === 'mp3' || contentExtension === 'ogg') {
       appendTitleDesc(el);
-      createAudioContent(contentPath, contentExtension);
+      createAudioContent(contentPath, contentExtension, autoplay);
     } else {
       createIframeContent(contentPath);
     }
   } else {
     appendTitleDesc(el);
-    createVideoSourceSetContent(el, poster);
+    createVideoSourceSetContent(el, poster, autoplay);
   }
   // Set the style attributes regardless the content type
   setContentStyle(el);
